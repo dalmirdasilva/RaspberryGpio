@@ -11,11 +11,9 @@ void GpioRPi::stop() {
 }
 
 void GpioRPi::digitalWrite(unsigned char pin, bool value) {
-    if (value == LOW) {
-        clearPin(pin);
-    } else {
-        setPin(pin);
-    }
+    volatile unsigned int* address = (unsigned int*)gpio.mem + ((value) ? BCM2835_GPSET0 : BCM2835_GPCLR0) / 4 + pin / 32;
+    unsigned char shift = pin % 32;
+    safeWrite(address, 0x000001 << shift);
 }
 
 bool GpioRPi::digitalRead(unsigned char pin) {
@@ -26,15 +24,11 @@ bool GpioRPi::digitalRead(unsigned char pin) {
 }
     
 void GpioRPi::setPin(unsigned char pin) {
-    volatile unsigned int* address = (unsigned int*)gpio.mem + BCM2835_GPSET0 / 4 + pin / 32;
-    unsigned char shift = pin % 32;
-    safeWrite(address, 0x000001 << shift);
+    digitalWrite(pin, HIGH)
 }
 
 void GpioRPi::clearPin(unsigned char pin) {
-    volatile unsigned int* address = (unsigned int*)gpio.mem + BCM2835_GPCLR0 / 4 + pin / 32;
-    unsigned char shift = pin % 32;
-    safeWrite(address, 0x000001 << shift);
+    digitalWrite(pin, LOW)
 }
 
 void GpioRPi::pinMode(unsigned char pin, bool mode) {
